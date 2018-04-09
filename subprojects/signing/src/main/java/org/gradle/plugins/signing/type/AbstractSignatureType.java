@@ -38,12 +38,18 @@ public abstract class AbstractSignatureType implements SignatureType {
     @Override
     public File sign(final Signatory signatory, File toSign) {
         final File signatureFile = fileFor(toSign);
+        sign(signatory, toSign, signatureFile);
+        return signatureFile;
+    }
+
+    @Override
+    public void sign(final Signatory signatory, File toSign, final File destination) {
         try {
             withResource(newInputStream(toSign), new Action<InputStream>() {
                 @Override
                 public void execute(final InputStream toSignStream) {
                     try {
-                        withResource(newOutputStream(signatureFile), new Action<BufferedOutputStream>() {
+                        withResource(newOutputStream(destination), new Action<BufferedOutputStream>() {
                             @Override
                             public void execute(BufferedOutputStream signatureFileStream) {
                                 sign(signatory, toSignStream, signatureFileStream);
@@ -57,7 +63,6 @@ public abstract class AbstractSignatureType implements SignatureType {
         } catch (FileNotFoundException e) {
             throw new UncheckedIOException(e);
         }
-        return signatureFile;
     }
 
     @Override

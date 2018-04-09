@@ -399,6 +399,6 @@ public class Signature extends AbstractPublishArtifact {
             }
         }
 
-        signatureType.sign(signatory, toSign);
+        signatureType.sign(signatory, toSign, getFile());
     }
 }

@@ -15,6 +15,7 @@
  */
 package org.gradle.plugins.signing.type;
 
+import org.gradle.api.Incubating;
 import org.gradle.plugins.signing.signatory.Signatory;
 
 import java.io.File;
@@ -54,8 +55,21 @@ public interface SignatureType {
      * @param signatory The signatory
      * @param toSign The file to be signed
      * @return The file where the signature has been written to
+     * @deprecated Please use {@link #sign(Signatory, File, File)}
      */
+    @Deprecated
     File sign(Signatory signatory, File toSign);
+
+    /**
+     * Signs the given file and returns the file where the signature has been written to.
+     *
+     * @param signatory The signatory
+     * @param toSign The file to be signed
+     * @param destination The file the signature will be written to
+     * @since 4.8
+     */
+    @Incubating
+    void sign(Signatory signatory, File toSign, File destination);
 
     /**
      * Signs the data from the given InputStream and stores the signature in the given OutputStream.

@@ -116,7 +116,7 @@ public class Sign extends DefaultTask implements SignatureSpec {
                 name = "_" + name.substring(1);
             }
 
-            filesWithPotentialNameCollisions.put(name, signature.getToSign());
+            filesWithPotentialNameCollisions.put(name, signature.getSignatureType().fileFor(signature.getToSign()));
         }
 
         Map<String, File> files = Maps.newHashMap();

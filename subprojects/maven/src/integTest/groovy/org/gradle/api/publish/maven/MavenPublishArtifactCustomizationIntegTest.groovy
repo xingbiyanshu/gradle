@@ -84,7 +84,7 @@ class MavenPublishArtifactCustomizationIntegTest extends AbstractMavenPublishInt
                     from components.java
                 }
             }
-            publications.maven.artifacts.each {
+            publications.maven.artifacts.all {
                 if (it.extension == 'jar') {
                     it.classifier = 'classified'
                 }

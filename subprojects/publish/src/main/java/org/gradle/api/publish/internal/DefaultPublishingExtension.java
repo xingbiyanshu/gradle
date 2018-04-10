@@ -22,7 +22,6 @@ import org.gradle.api.plugins.DeferredConfigurable;
 import org.gradle.api.publish.PublicationContainer;
 import org.gradle.api.publish.PublishingExtension;
 
-@DeferredConfigurable
 public class DefaultPublishingExtension implements PublishingExtension {
     private final RepositoryHandler repositories;
     private final PublicationContainer publications;

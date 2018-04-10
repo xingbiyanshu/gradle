@@ -94,6 +94,8 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
     private FileCollection gradleModuleDescriptorFile;
     private SoftwareComponentInternal component;
     private boolean alias;
+    private boolean populated;
+    private boolean artifactsOverwritten;
 
     public DefaultIvyPublication(
         String name, Instantiator instantiator, IvyPublicationIdentity publicationIdentity, NotationParser<Object, IvyArtifact> ivyArtifactNotationParser,
@@ -161,7 +163,16 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
             throw new InvalidUserDataException(String.format("Ivy publication '%s' cannot include multiple components", name));
         }
         this.component = (SoftwareComponentInternal) component;
+    }
 
+    private void populatedFromComponent() {
+        if (populated) {
+            return;
+        }
+        populated = true;
+        if (component == null) {
+            return;
+        }
         configurations.maybeCreate("default");
 
         Set<PublishArtifact> seenArtifacts = Sets.newHashSet();
@@ -173,7 +184,7 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
             configurations.getByName("default").extend(conf);
 
             for (PublishArtifact publishArtifact : usageContext.getArtifacts()) {
-                if (!seenArtifacts.contains(publishArtifact)) {
+                if (!artifactsOverwritten && !seenArtifacts.contains(publishArtifact)) {
                     seenArtifacts.add(publishArtifact);
                     artifact(publishArtifact).setConf(conf);
                 }
@@ -181,7 +192,7 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
 
             for (ModuleDependency dependency : usageContext.getDependencies()) {
                 if (seenDependencies.add(dependency)) {
-                // TODO: When we support multiple components or configurable dependencies, we'll need to merge the confs of multiple dependencies with same id.
+                    // TODO: When we support multiple components or configurable dependencies, we'll need to merge the confs of multiple dependencies with same id.
                     String confMapping = String.format("%s->%s", conf, dependency.getTargetConfiguration() == null ? Dependency.DEFAULT_CONFIGURATION : dependency.getTargetConfiguration());
                     if (dependency instanceof ProjectDependency) {
                         addProjectDependency((ProjectDependency) dependency, confMapping);
@@ -224,6 +235,7 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
     }
 
     public IvyConfigurationContainer getConfigurations() {
+        populatedFromComponent();
         return configurations;
     }
 
@@ -236,6 +248,7 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
     }
 
     public void setArtifacts(Iterable<?> sources) {
+        artifactsOverwritten = true;
         ivyArtifacts.clear();
         for (Object source : sources) {
             artifact(source);
@@ -243,6 +256,7 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
     }
 
     public DefaultIvyArtifactSet getArtifacts() {
+        populatedFromComponent();
         return ivyArtifacts;
     }
 
@@ -271,6 +285,7 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
     }
 
     public FileCollection getPublishableFiles() {
+        populatedFromComponent();
         if (gradleModuleDescriptorFile == null) {
             // possible if the gradle metadata feature is disabled
             return new UnionFileCollection(ivyArtifacts.getFiles(), ivyDescriptorFile);
@@ -283,10 +298,12 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
     }
 
     public Set<IvyDependencyInternal> getDependencies() {
+        populatedFromComponent();
         return ivyDependencies;
     }
 
     public IvyNormalizedPublication asNormalisedPublication() {
+        populatedFromComponent();
         return new IvyNormalizedPublication(name, getIdentity(), assertDescriptorFile(ivyDescriptorFile), maybeGradleDescriptorFile(), ivyArtifacts);
     }
 
@@ -359,6 +376,7 @@ public class DefaultIvyPublication implements IvyPublicationInternal {
 
     @Override
     public PublishedFile getPublishedFile(PublishArtifact source) {
+        populatedFromComponent();
         final String publishedUrl = getPublishedUrl(source);
         return new PublishedFile() {
             @Override
